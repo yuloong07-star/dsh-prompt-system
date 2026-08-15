@@ -30,11 +30,27 @@ DeepSeek Harness（DSH）提示词优化插件：在对话输入框的模型选�
 
 ## 安装
 
+**方式一：npm 发布后（推荐）**
+
 ```bash
-dsh plugin --profile web add dsh-prompt-system   # 或：DSH 设置 → 插件市场安装
+dsh plugin --profile web add dsh-prompt-system
 ```
 
-安装后重启 DSH web 服务生效（非 bundle 插件会插入 profile 的 `cordis.patch.yml`）。
+或在 DSH 设置 → 插件市场搜索安装。安装后重启 DSH web 服务生效。
+
+**方式二：本地包（未发布时）**
+
+1. 把本包目录复制（或软链）到 `~/.dsh/profiles/web/node_modules/dsh-prompt-system`（即 `$DSH_HOME/profiles/web/node_modules/dsh-prompt-system`）；
+2. 在 `~/.dsh/profiles/web/cordis.patch.yml` 末尾追加：
+
+```yaml
+- insert:
+    - id: prompt-system
+      name: 'dsh-prompt-system'
+```
+
+3. 在 profile 的 `package.json` 的 `dependencies` 中记录 `"dsh-prompt-system": "0.1.0"`；
+4. 重启 DSH web 服务生效。
 
 ## 结构
 
