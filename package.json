@@ -10,6 +10,19 @@
     "./package.json": "./package.json"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yuloong07-star/dsh-prompt-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yuloong07-star/dsh-prompt-system/issues"
+  },
+  "homepage": "https://github.com/yuloong07-star/dsh-prompt-system#readme",
+  "files": [
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
@@ -29,5 +42,9 @@
   },
   "peerDependencies": {
     "react": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   }
 }
