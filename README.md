@@ -1,6 +1,6 @@
 # dsh-prompt-system
 
-DeepSeek Harness（DSH）提示词优化插件：在对话输入框的模型选择按钮左侧提供「✨ 优化提示词」按钮，点击后由**当前对话模型**结合**对话历史**与**工作区文件**，把草稿优化为「目标 / 实现措施 / 约束」三段式精准提示词，支持一键撤销。
+DeepSeek Harness（DSH）提示词优化插件：在对话输入框的模型选择按钮左侧提供「✨ 优化提示词」按钮，点击后由**当前对话模型**结合**对话历史**与**工作区文件**，把草稿优化为「角色 / 背景 / 注意 / 技能 / 目标 / 约束 / 流程 / 输出格式 / 建议」分析式结构提示词，支持一键撤销。
 
 ## 行为
 
@@ -14,19 +14,42 @@ DeepSeek Harness（DSH）提示词优化插件：在对话输入框的模型选�
 
 ## 优化产物格式
 
+优化产物是一段可直接使用的新提示词，包含十一个部分（分析式结构优化）：
+
 ```
-【目标】把模糊描述改写为具体、可执行的任务：做什么、给谁用、期望结果。
-【实现措施】每条一句话给出方向，引用工作区真实存在的文件/目录/技术栈。
-【约束】最多 3 条，只保留影响输出正确性的必要规则。
+# Role：[角色名称]
+
+## Background：[背景描述]
+
+## Attention：[注意要点和动机激励]
+
+## Profile：
+- Author / Version / Language / Description
+### Skills: 5 条
+
+## Goals: 5 条
+
+## Constrains: 5 条
+
+## Workflow: 5 步
+
+## OutputFormat: 3 条
+
+## Suggestions: 5 条（角色内在工作方法论）
+
+## Initialization
+作为[Role]，你必须遵守[Constrains]，使用默认[Language]与用户交流。
 ```
 
-输出风格精准克制：约束 ≤3 条、实现措施只给方向、默认不加「需人工核验」（仅当草稿明确要求时保留）；草稿原文与约束上限冲突时以草稿原文为准。
+约束：直接输出优化后的提示词，不加解释性文字、不用代码块包围；每个部分都要有具体内容，不使用空泛模板占位符；原始提示词里的双花括号变量占位符（如 `{{variable_name}}`）逐字保留。若模型仍用围栏包裹，插件只剥掉最外层一层。
 
 ## 模型与上下文
 
-- **模型绑定**：优化所用 LLM 与创建会话时刻界面上当前选定的模型一致（`agentDefaultModel.currentSelection()`），不写死任何模型名。
-- **上下文**：会话最近 ≤12 条对话（≤8000 字符）+ 工作区文件摘要（目录树 ≤60 项 + 关键文件 ≤30 个、每文件 ≤2500 字符、总量 ≤12000 字符，跳过 node_modules/.git 等）。
+- **模型绑定**：优先读当前会话的 `modelSelection` 会话投影（`pending ?? lastUsed`，即作曲家里这个会话选定的模型）；会话尚无选择时回退到 `agentDefaultModel.currentSelection()` 全局默认值。不写死任何模型名。
+- **所用路由可见**：优化成功后按钮 tooltip 显示 `优化提示词 · provider/model`，即本次实际调用的模型。
+- **上下文**：会话最近 ≤12 条对话（≤8000 字符）+ 工作区文件摘要（目录树 ≤60 项 + 关键文件 ≤30 个、每文件 ≤2500 字符、总量 ≤12000 字符，跳过 node_modules/.git 等）。两者与草稿一起放进证据 JSON 的 `conversationContext` / `workspaceContext` / `originalPrompt` 字段。
 - **缓存**：键 = provider + model + 对话历史 hash(FNV-1a) + 草稿；模型标识读取时校验，对话历史变化即重新优化。
+- **提示词体积**：单次未命中缓存的优化请求，system 与用户脚手架合计约 2.6 KB（不含上下文证据）。
 
 ## 安装
 
@@ -49,7 +72,7 @@ dsh plugin --profile web add dsh-prompt-system
       name: 'dsh-prompt-system'
 ```
 
-3. 在 profile 的 `package.json` 的 `dependencies` 中记录 `"dsh-prompt-system": "0.1.0"`；
+3. 在 profile 的 `package.json` 的 `dependencies` 中记录 `"dsh-prompt-system": "0.2.0"`；
 4. 重启 DSH web 服务生效。
 
 ## 结构
@@ -57,13 +80,18 @@ dsh plugin --profile web add dsh-prompt-system
 ```
 lib/index.js    Host：Typert Remote `promptOptimizer.optimizePrompt`（扫描/上下文/缓存/LLM 调用）
 lib/client.js   浏览器：模型选择左侧按钮、状态机、撤销快照
+cordis.patch.yml  profile 补丁层：插入 prompt-system 宿主行
 ```
+
+远程调用契约：Typert Remote 方法解析为 `RemoteResult<T>` = `{ ok: true, value }` | `{ ok: false, error }`，宿主返回的业务对象（`{ ok, optimized, route }`）在 `value` 里。客户端必须解包后再读 `optimized` / `error`，否则成功的结果会被误判成失败。
 
 ## 配套文档
 
 - 系统提示词全文与「插件注入版」：`prompt-optimizer-system-prompt.md`（同仓库上游工作区）
 - 迭代改动清单：`prompt-optimizer-plugin-changelog.md`
 
-## License
+## 许可证与致谢
 
-MIT
+本插件以 **AGPL-3.0-only** 分发，全文见 [LICENSE](LICENSE)。
+
+`lib/index.js` 中的系统提示词与用户脚手架逐字移植自 [linshenkx/prompt-optimizer](https://github.com/linshenkx/prompt-optimizer) 的 `analytical-optimize`（分析式结构优化）模板，该项目同样以 AGPL-3.0-only 授权，版权归 Copyright (C) 2025 linshenkx 所有。插件其余部分（Typert Remote 宿主半、浏览器半、上下文采集与缓存）为本仓库原创。

@@ -1,0 +1,6 @@
+# dsh-prompt-system bundle patch: one host row. The host half registers the
+# `promptOptimizer` Remote service; the same package's `dsh.client` declaration
+# makes the browser half load into the composer's model-selection row.
+- insert:
+    - id: prompt-system
+      name: 'dsh-prompt-system'
