@@ -1,7 +1,7 @@
 {
   "name": "dsh-prompt-system",
-  "version": "0.2.0",
-  "description": "提示词优化插件：模型选择左侧「优化提示词」按钮，结合当前对话与工作区文件，把草稿优化为「角色/背景/技能/目标/约束/流程/输出格式/建议」分析式结构提示词，支持一键撤销",
+  "version": "1.0.0",
+  "description": "提示词优化插件：模型选择左侧 ✨ 按钮，按草稿意图自动路由模板（图片创作/通用）；通用模板提供四档强度（轻/中/高/最高）与自定义骨架，图片模板可分标准/自定义，设置页可改，支持一键撤销",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -40,6 +40,7 @@
         "@deepseek-ai/dsh-api-remotes",
         "@deepseek-ai/dsh-client-runtime",
         "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-settings",
         "@deepseek-ai/dsh-client-locale"
       ]
     }

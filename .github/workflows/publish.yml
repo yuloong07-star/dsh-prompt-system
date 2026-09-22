@@ -1,9 +1,8 @@
 name: Publish to npm
 
+# 手动触发：npm 侧的 trusted publisher 尚未配置，随 tag 自动发布会必然失败。
+# 配置完成后可恢复 `push: tags: ["v*"]` 触发。
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
 
 permissions:
