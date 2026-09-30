@@ -137,7 +137,7 @@ dsh plugin --profile <profile> add github:yuloong07-star/dsh-prompt-system
 
 该路径已实测可用：安装后 `dsh.profile.bundles` 会选入 `dsh-prompt-system`，无 “declares no dsh.bundle” 警告。远端当前为 **1.0.0**。
 
-> **npm 渠道已停止维护。** npm 上现存的 `dsh-prompt-system@0.1.0` 是遗留版本，且**装上去也不能用**：它的 `dsh` 字段没有 `bundle` 声明、tarball 里也没有 `cordis.patch.yml`，只会作为普通依赖装入、不会激活，并打印 “declares no dsh.bundle” 警告。该版本之后不会再有更新——发布者的 npm 账号已无法找回，本仓库的后续版本只通过上方 GitHub 源分发。请不要使用 `dsh plugin --profile <profile> add dsh-prompt-system`。
+> **npm 渠道已停止维护。** npm 上现存的 `dsh-prompt-system@0.1.0` 是遗留版本，且**装上去也不能用**：它的 `dsh` 字段没有 `bundle` 声明、tarball 里也没有 `cordis.patch.yml`，只会作为普通依赖装入、不会激活，并打印 “declares no dsh.bundle” 警告。本仓库已决定不再发布 npm，`0.1.0` 之后不会再有更新，后续版本只通过上方 GitHub 源分发。请不要使用 `dsh plugin --profile <profile> add dsh-prompt-system`。
 
 **方式二：本地包**
 
