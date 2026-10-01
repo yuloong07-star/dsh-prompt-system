@@ -133,7 +133,7 @@ Suggestions：
 
 ## 安装
 
-**方式一：GitHub 源（推荐，唯一在维护的安装方式）**
+**GitHub 源（唯一安装方式）**
 
 ```bash
 dsh plugin --profile <profile> add github:yuloong07-star/dsh-prompt-system
@@ -141,9 +141,7 @@ dsh plugin --profile <profile> add github:yuloong07-star/dsh-prompt-system
 
 该路径已实测可用：安装后 `dsh.profile.bundles` 会选入 `dsh-prompt-system`，无 “declares no dsh.bundle” 警告。远端当前为 **1.0.0**。
 
-> **npm 渠道已停止维护。** npm 上现存的 `dsh-prompt-system@0.1.0` 是遗留版本，且**装上去也不能用**：它的 `dsh` 字段没有 `bundle` 声明、tarball 里也没有 `cordis.patch.yml`，只会作为普通依赖装入、不会激活，并打印 “declares no dsh.bundle” 警告。本仓库已决定不再发布 npm，`0.1.0` 之后不会再有更新，后续版本只通过上方 GitHub 源分发。请不要使用 `dsh plugin --profile <profile> add dsh-prompt-system`。
-
-**方式二：本地包**
+**本地包**
 
 1. 把本包目录复制到 `<DSH_HOME>/profiles/<profile>/node_modules/dsh-prompt-system`；
 2. 在 `<DSH_HOME>/profiles/<profile>/cordis.patch.yml` 末尾追加：
