@@ -2,6 +2,10 @@
 
 本文件记录本仓库的发布版本。版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## Unreleased
+
+- 停止发布 npm：移除 `package.json` 的 `publishConfig` 与 npm 发布工作流 `.github/workflows/publish.yml`；README 只保留 GitHub 源与本地包两种安装方式，不再指向 npm。
+
 ## 1.0.0
 
 首个稳定版本：宿主半（Typert Remote 服务 `promptOptimizer` + 设置命名空间 `prompt-optimizer`）与浏览器半（composer 按钮 + 设置页）的接口按本版本定型。本版本相对 0.2.0 是一次重构级更新。
@@ -52,3 +56,4 @@
 ## 0.1.0
 
 - 首个发布版本：提示词优化插件（对话历史 + 工作区上下文、结构化输出、撤销状态机、含对话历史 hash 的缓存键）。
+
