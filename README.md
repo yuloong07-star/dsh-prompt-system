@@ -65,6 +65,8 @@ Suggestions：
 
 设置页在 **侧栏设置 →「优化提示词」**（页面标题带一颗 ✨，与 composer 按钮同一视觉标识），改动**即时生效**（无需重启）：优化请求每次调用时现读已解析设置。
 
+设置页读写的四个字段（`strength` / `customTemplate` / `imageMode` / `customImageTemplate`）在 schema 上声明了 `.volatile()`，这是它们可读可写的前提：DSH 的设置文档只投影 volatile 字段，一个条目若没有任何 volatile 字段，`settings.describe()` 会跳过它、命名空间不出现在结果里（页面随即显示「当前连接不可写入设置」，控件全部禁用），`settings.mutate()` 也会以「has no volatile fields」拒绝写入。volatile 字段在已解析 config 里是 `Volatile<T>` 引用，宿主侧经 `.get()` 取值；热更新时 cordis 用 `updateVolatile` 原地改写引用，所以插件不会被重启。`temperature` / `maxTokens` / `timeoutMs` 是部署配置，保持普通值、不参与设置页。
+
 页面分「通用模板」与「图片模板」两个区域，每个区域下方固定一个**只读信息框**（浅灰底、细边框、低对比度辅助文字），一眼看清当前模板包含哪些段落；信息框没有任何编辑入口。
 
 ### 通用模板（默认「高」）
@@ -119,7 +121,7 @@ Suggestions：
 | 字段 | 默认 | 说明 |
 |---|---|---|
 | `strength` | `high` | 通用模板强度：`light` / `medium` / `high` / `max` / `custom` |
-| `customTemplate` | 空 | `custom` 时的段落骨架（每行一段，形如「段名：说明」）；留空回落到 `max` |
+| `customTemplate` | 空 | `custom` 时的段落骨架（每行一段，形如「段名：说明」）；留空回落到默认档「高」（7 段） |
 | `imageMode` | `standard` | 图片模板模式：`standard` / `custom` |
 | `customImageTemplate` | 空 | `custom` 时的图像指令；留空回落到 `standard` |
 | `temperature` / `maxTokens` | 不发送 | 默认不带这两个参数；只有显式配置才发送 |
@@ -157,7 +159,7 @@ dsh plugin --profile <profile> add github:yuloong07-star/dsh-prompt-system
 
 ```
 lib/index.js    Host：Typert Remote `promptOptimizer.optimizePrompt`（扫描/上下文/缓存/LLM 调用）
-                + 设置命名空间 `prompt-optimizer`（档位与自定义模板）
+                + 设置条目 `prompt-system` 的四个 volatile 字段（档位与自定义模板）
 lib/client.js   浏览器：模型选择左侧按钮、状态机、撤销快照；设置页「优化提示词」
 cordis.patch.yml  profile 补丁层：插入 prompt-system 宿主行
 ```
