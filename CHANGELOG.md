@@ -4,7 +4,7 @@
 
 ## Unreleased
 
-- 停止发布 npm：移除 `package.json` 的 `publishConfig` 与 npm 发布工作流 `.github/workflows/publish.yml`；README 只保留 GitHub 源与本地包两种安装方式，不再指向 npm。
+- 收敛分发渠道：README 的安装说明只保留 GitHub 源与本地包两种方式，移除包管理器的发布配置与自动化发布工作流。
 
 ## 1.0.0
 
