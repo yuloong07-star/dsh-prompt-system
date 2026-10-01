@@ -30,6 +30,9 @@
     "prompt-optimizer",
     "prompt-enhancement"
   ],
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.4"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

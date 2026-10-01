@@ -65,7 +65,9 @@ Suggestions：
 
 设置页在 **侧栏设置 →「优化提示词」**（页面标题带一颗 ✨，与 composer 按钮同一视觉标识），改动**即时生效**（无需重启）：优化请求每次调用时现读已解析设置。
 
-设置页读写的四个字段（`strength` / `customTemplate` / `imageMode` / `customImageTemplate`）在 schema 上声明了 `.volatile()`，这是它们可读可写的前提：DSH 的设置文档只投影 volatile 字段，一个条目若没有任何 volatile 字段，`settings.describe()` 会跳过它、命名空间不出现在结果里（页面随即显示「当前连接不可写入设置」，控件全部禁用），`settings.mutate()` 也会以「has no volatile fields」拒绝写入。volatile 字段在已解析 config 里是 `Volatile<T>` 引用，宿主侧经 `.get()` 取值；热更新时 cordis 用 `updateVolatile` 原地改写引用，所以插件不会被重启。`temperature` / `maxTokens` / `timeoutMs` 是部署配置，保持普通值、不参与设置页。
+设置页读写的四个字段（`strength` / `customTemplate` / `imageMode` / `customImageTemplate`）在 schema 上声明为 volatile，这是它们可读可写的前提：DSH 的设置文档只投影 volatile 字段，一个条目若没有任何 volatile 字段，`settings.describe()` 会跳过它、命名空间不出现在结果里（页面随即显示「当前连接不可写入设置」，控件全部禁用），`settings.mutate()` 也会以「has no volatile fields」拒绝写入。volatile 字段在已解析 config 里是 `Volatile<T>` 引用，宿主侧经 `.get()` 取值；热更新时 cordis 用 `updateVolatile` 原地改写引用，所以插件不会被重启。`temperature` / `maxTokens` / `timeoutMs` 是部署配置，保持普通值、不参与设置页。
+
+> **依赖：`@deepseek-ai/schemastery` ≥ 3.18.4。** 声明 volatile 用的 `.volatile()` 是 3.18.4 才有的 API，而插件解析到的是 **profile 里装的那一份** schemastery，不是运行时自带的那份：老副本（如 3.18.2，由别的插件的 peer 依赖带进 profile）没有 `.volatile()`，直接调用会在 **import 阶段抛 `TypeError`**——整条插件条目连宿主半都起不来（`entry.fiber` 为空，启动日志只有一句 `failed to import` 警告），composer 的 ✨ 按钮与设置页会一起消失，且不产生任何显式报错。因此本插件在 `dependencies` 里显式声明 `@deepseek-ai/schemastery: ^3.18.4`，并用 `volatileField()` 兜底：万一解析到老副本，退化为 `.extra("volatile", true)`——设置页照常可读可写，只是写入要等重载才生效（老副本不产生可原地改写的 Volatile 引用），不会再让整个插件挂掉。
 
 页面分「通用模板」与「图片模板」两个区域，每个区域下方固定一个**只读信息框**（浅灰底、细边框、低对比度辅助文字），一眼看清当前模板包含哪些段落；信息框没有任何编辑入口。
 
