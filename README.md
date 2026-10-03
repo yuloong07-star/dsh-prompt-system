@@ -159,12 +159,45 @@ dsh plugin --profile <profile> add github:yuloong07-star/dsh-prompt-system
 
 ```
 lib/index.js    Host：Typert Remote `promptOptimizer.optimizePrompt`（扫描/上下文/缓存/LLM 调用）
+                + 严格调用描述符 `HOST_TYPERT`（ctx.typert.register，决定端点能否被宿主认领）
                 + 设置条目 `prompt-system` 的四个 volatile 字段（档位与自定义模板）
 lib/client.js   浏览器：模型选择左侧按钮、状态机、撤销快照；设置页「优化提示词」
 cordis.patch.yml  profile 补丁层：插入 prompt-system 宿主行
 ```
 
 远程调用契约：Typert Remote 方法解析为 `RemoteResult<T>` = `{ ok: true, value }` | `{ ok: false, error }`，宿主返回的业务对象（`{ ok, optimized, route, template }`）在 `value` 里。客户端必须解包后再读 `optimized` / `template` / `error`，否则成功的结果会被误判成失败。
+
+### `HTTP 404` 的根因与修复
+
+**症状**：按钮与设置页都在、插件条目显示「运行中」，点 ✨ 固定失败：
+
+```
+client api: promptOptimizer/optimizePrompt failed: transport failure for /api/promptOptimizer/optimizePrompt: HTTP 404
+```
+
+**根因**（两条链条叠加，缺一不可）
+
+1. 条目级 `Config` 校验会把 `strength` 等字段解析成 **`Volatile<T>` 引用**（值要 `.get()`）。`apply(ctx, config)` 又把这份**已解析**的 config 原样交给 `ctx.plugin(PromptOptimizerGateway, config)`，子 fiber 再拿 `OptimizerConfig` 校验一次，等于拿引用对象去匹配 `z.union(["light", …])`，直接抛：
+
+   ```
+   invalid config: $.strength expected "light" | … but got {}
+   ```
+
+2. 这个错误只经 `ctx.logger.error` 输出、宿主端看不见 → **子 fiber 静默 `FAIL`，`promptOptimizer` 服务从未构造** → 网关 `collectSrcClaims()` 无从发现它 → `claimsEndpoint()` 返回 false → `/api` 共享通道回 `not found` 404。
+
+**修复**（两处）
+
+- `PromptOptimizerGateway` **不声明 `static Config`**：配置校验只由模块导出的 `Config` 承担一次；子 fiber 直接继承已解析的 config，`readSettings()` 经 `.get()` 现读，设置页改档仍能热更新（不需重启）。
+- 新增 `HOST_TYPERT` 严格调用描述符，`ctx.typert.register()` 写进 `ctx.typert.local`：
+
+```js
+if (ctx.typert.local.get(endpoint) !== undefined || ctx.typert.local.hasSeen(endpoint)) return true;
+this.srcClaims ??= this.collectSrcClaims();   // SRC 扫描只算一次，兄弟节点的事件不作废它
+return this.srcClaims.has(endpoint);
+```
+
+  认领从此走**实时读取**的首个分支，不再依赖 SRC 快照与插件挂载顺序。`@Remote` 标记保留，作为宿主无 `typert` 注册表时的回退。
+
 
 ## 许可证与致谢
 

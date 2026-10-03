@@ -4,6 +4,22 @@
 
 ## Unreleased
 
+## 1.0.1
+
+### 修复：点击 ✨ 报 `HTTP 404`
+
+- **症状**：按钮与设置页都在、插件条目也显示「运行中」，但点击 ✨ 固定失败：
+  `client api: promptOptimizer/optimizePrompt failed: transport failure for /api/promptOptimizer/optimizePrompt: HTTP 404`。
+- **根因（两条链条叠加）**：
+  1. 条目级 `Config` 校验把 `strength` 等字段解析成 `Volatile<T>` 引用后，`apply(ctx, config)` 又把这份**已解析**的 config 原样交给 `ctx.plugin(PromptOptimizerGateway, config)`；子 fiber 再拿 `OptimizerConfig` 校验一次，等于拿引用对象去匹配 `z.union(["light", …])`，抛 `invalid config: $.strength expected "light" | … but got {}`。
+  2. 该错误只经 `ctx.logger.error` 输出、宿主端看不见 → 子 fiber 静默 `FAIL`，`promptOptimizer` 服务从未构造 → 网关 `collectSrcClaims()` 无从发现 → `claimsEndpoint()` 返回 false → `/api` 共享通道回 `not found` 404。（插件清单显示「运行中」只代表模块条目 fiber，内部派生的子 fiber 失败是看不到的。）
+- **修复**：
+  1. `PromptOptimizerGateway` 去掉 `static Config` —— 配置校验只由模块导出的 `Config` 承担一次；子 fiber 继承已解析的 config，`readSettings()` 经 `.get()` 现读，设置页改档仍可热更新。
+  2. 新增 `HOST_TYPERT` 严格调用描述符，构造函数里 `ctx.typert.register()` 写入 `ctx.typert.local`，使 `claimsEndpoint()` 走**实时读取**的首个分支，认领不再依赖只计算一次的 SRC 快照与插件挂载顺序。注册失败时捕获并退回 SRC 路径、留下告警，不连累插件本体。
+- **验证**：从 asar 解出真实 `dsh-typert-registry@0.2.0-rc.2`、`dsh-api-gateway`、`@deepseek-ai/cordis`、`dsh-typert-protocol` 跑端到端：修复前子 fiber `state=FAIL`、服务 `undefined`、`local.get(endpoint)` 为 `undefined`（即 404 条件）；修复后 9/9 通过 —— `claimsEndpoint() === true`、`resolveDescriptor()` 返回描述符、`prepareInvocation()` 解出 wire 参数、`invokePrepared()` 真实跑通 `optimizePrompt` 并返回 `{ok:true, optimized, route, template}`、恰好一次 `llm.stream` 调用、结果经严格 codec + JSON 往返无损。
+
+### 分发收敛
+
 - 收敛分发渠道：README 的安装说明只保留 GitHub 源与本地包两种方式，移除包管理器的发布配置与自动化发布工作流。
 
 ## 1.0.0
